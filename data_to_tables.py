@@ -18,16 +18,16 @@ def create_connection(db_file):
     return conn
 
 
-def create_listing(conn, listing)
+def create_listing(conn, listing_values)
     """ insert a new listing row into the listings table, DOES NOT COMMIT
     :param conn: Connection object
-    :param listing: values to insert to table
+    :param listing_values: values to insert to table
     :return: id of inserted listing
     """
     sql_insert_statement = ''' INSERT INTO listings(listing_id, listing_name, location, cost_per_month, seen_at)
                                VALUES(?,?,?,?,?) '''
     c.conn.cursor()
-    c.execute(sql_insert_statement, listing)
+    c.execute(sql_insert_statement, listing_values)
     return c.lastrowid
 
 
@@ -41,9 +41,12 @@ def main():
         # create a new listing in listings table
         # UPDATE USING DICTIONARY FROM SCRAPING
         # listing = ('','','','','')
-        listing_id = create_listing(conn, listing)
+        listing_id = create_listing(conn, listing_values)
     # commit inserted listings to database
     conn.commit()
+
+    # closes connection to database
+    conn.close()
 
 if __name__ == '__main__':
     main()

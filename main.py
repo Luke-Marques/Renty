@@ -4,6 +4,7 @@ import time
 import requests
 from bs4 import BeautifulSoup
 import re
+import os
 
 headers = {
     'user-agent': 'Renty',
@@ -46,7 +47,7 @@ def ParseTagForPropertyID(tag):
 def GetPropertiesFromPage(url):
     # r = requests.get(url, headers=headers)
     # page_html = r.text
-    page_html = open("pages\\BristolPage.html", encoding='utf-8')
+    page_html = open(f"pages{os.sep}BristolPage.html", encoding='utf-8')
 
     tree = BeautifulSoup(page_html, "html.parser")
     better_file = tree.prettify()

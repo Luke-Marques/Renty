@@ -24,7 +24,7 @@ class urlManager:
 
 
 def ParseTagForPropertyID(tag):
-    global duplicate_count
+    global duplicate_count, propertyData, max_duplicate_count
     property_id = tag['id']
     if "property-" not in property_id:
         return 0

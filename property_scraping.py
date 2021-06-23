@@ -67,6 +67,8 @@ def get_data_from_searchResult_div(div):
 
     # get title
     title_div = div.find('h2', class_='propertyCard-title')
+    title = str(title_div)
+    title = ''.join(title.splitlines())
     title = re.search('>(.*)</', str(title_div))
 
     # get price
@@ -121,6 +123,7 @@ def main():
         print(data)
         count += 1
     print(count)
+
 
 if __name__ == '__main__':
     main()

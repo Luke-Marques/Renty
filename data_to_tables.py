@@ -1,21 +1,7 @@
 import os
 import sqlite3
 from sqlite3 import Error
-
-
-def create_connection(db_file):
-    """ create a database connection to SQLite database specified by db_file
-    :param db_file: database file
-    :return: Connection object or None
-    """
-    conn = None
-    try:
-        conn = sqlite3.connect(db_file)
-        return conn
-    except Error as e:
-        print(e)
-
-    return conn
+import create_database as cdb
 
 
 def create_listing(conn, listing_values):
@@ -36,7 +22,7 @@ def main():
     database = f'{os.getcwd()}{os.sep}db{os.sep}listings.db'
 
     # create a database connection
-    conn = create_connection(database)
+    conn = cdb.create_connection(database)
     with conn:
         # create a new listing in listings table
         # UPDATE USING DICTIONARY FROM SCRAPING

@@ -42,7 +42,6 @@ def create_table(conn, create_table_sql):
 
 
 def main():
-
     create_db_dir(f'{os.getcwd()}{os.sep}db')
 
     database = f'{os.getcwd()}{os.sep}db{os.sep}properties.db'

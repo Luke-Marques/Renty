@@ -18,7 +18,7 @@ def create_connection(db_file):
     return conn
 
 
-def create_listing(conn, listing_values)
+def create_listing(conn, listing_values):
     """ insert a new listing row into the listings table, DOES NOT COMMIT
     :param conn: Connection object
     :param listing_values: values to insert to table
@@ -47,6 +47,7 @@ def main():
 
     # closes connection to database
     conn.close()
+
 
 if __name__ == '__main__':
     main()

@@ -3,7 +3,7 @@ import sqlite3
 from sqlite3 import Error
 
 
-def make_db_dir(path_to_dir):
+def create_db_dir(path_to_dir):
     """ create new directory to store sqlite3 database file
     :param path_to_dir: absolute path for new database directory
     :return:
@@ -42,6 +42,8 @@ def create_table(conn, create_table_sql):
 
 
 def main():
+
+    create_db_dir(f'{os.getcwd()}{os.sep}db')
 
     database = f'{os.getcwd()}{os.sep}db{os.sep}properties.db'
 

@@ -3,6 +3,7 @@ import time
 import re
 import requests
 from bs4 import BeautifulSoup
+import process_text
 import create_database as cdb
 import data_to_tables as d2t
 
@@ -22,7 +23,7 @@ def get_property_cards(base_url=None):
 
     # get html of base_url page
     if base_url is None:
-        page = open(f'pages{os.sep}BristolPage.html', encoding='utf-8')  # for testing
+        page = open(f'pages{os.sep}BristolRents.html', encoding='utf-8')  # for testing
     else:
         r = requests.get(base_url, headers=headers)
         page = r.text
@@ -64,6 +65,31 @@ def get_data_from_property_card(property_card):
     title = ''.join(title.splitlines())
     title = re.search('>(.*)</', title).group(1).strip()
 
+    # get number of bedrooms
+    title_processed = process_text.lemmatize_string(title)
+    if title_processed[1] == 'bedroom' and title_processed[0].isnumeric():
+        num_bed = int(title_processed[0])
+    elif 'studio' in title_processed:
+        num_bed = 0
+    else:
+        num_bed = None
+
+    # get type of property
+    if num_bed == 0:
+        property_type = 'studio'
+    elif 'apartment' in title_processed:
+        property_type = 'apartment'
+    elif 'flat' in title_processed:
+        property_type = 'flat'
+    elif 'detach' in title_processed:
+        property_type = 'detached house'
+    elif 'terrace' in title_processed:
+        property_type = 'terrace house'
+    elif 'property' in title_processed:
+        property_type = 'property'
+    elif 'house' in title_processed:
+        property_type = 'house'
+
     # get price
     price_element = property_card.find(class_='propertyCard-priceValue')
     price = str(price_element)
@@ -84,11 +110,22 @@ def get_data_from_property_card(property_card):
     description = ''.join(description.splitlines())
     description = re.search('<span>(.*)</span></span>', description).group(1).strip()
 
-    return property_id, title, price, location, description
+    # get agent and agent_region
+    agent_region_element = property_card.find('img', class_='propertyCard-branchLogo-image')
+    agent_region = str(agent_region_element)
+    agent_region = ''.join(agent_region.splitlines())
+    if re.search('alt="(.*) Logo', agent_region) is not None:
+        agent_region = re.search('alt="(.*) Logo', agent_region).group(1).strip()
+        agent = agent_region.split(',')[0]
+        agent_region = agent_region.split(',')[1]
+    else:
+        agent_region = None
+        agent = None
+
+    return property_id, title, num_bed, property_type, price, location, description, agent, agent_region
 
 
 def main():
-
     # creates db directory and file if they do not already exist
     # cdb.main()
 

@@ -1,6 +1,8 @@
 import os
 import time
 import re
+from enum import Enum
+
 import requests
 from bs4 import BeautifulSoup
 import create_database as cdb
@@ -12,6 +14,10 @@ headers = {'user-agent': 'Renty'}
 rightmove_bristol_base_url = 'https://www.rightmove.co.uk/property-for-sale/find.html?locationIdentifier=REGION%5E219' \
                              '&sortType=10''&index=??&propertyTypes=&includeSSTC=false&mustHave=&dontShow=' \
                              '&furnishTypes=&keywords= '
+
+
+def create_first_page_url(min_bedrooms=None, max_bedrooms=None):
+    rightmove_base_url = "https://www.rightmove.co.uk/property-to-rent/find.html?"
 
 
 def get_property_cards(base_url=None):
@@ -88,7 +94,6 @@ def get_data_from_property_card(property_card):
 
 
 def main():
-
     # creates db directory and file if they do not already exist
     # cdb.main()
 

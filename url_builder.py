@@ -56,7 +56,7 @@ class URLBuilder:
         return self
 
     def furnished_type(self, *argv):
-        self.url += "furnishTypes="
+        self.url += "&furnishTypes="
         for arg in argv:
             if arg not in self.allowed_furnish:
                 raise ValueError('Error! Furnished type "' + str(arg) + '" not allowed')
@@ -69,7 +69,7 @@ class URLBuilder:
         return self
 
     def must_have(self, *argv):
-        self.url += "mustHave="
+        self.url += "&mustHave="
         for arg in argv:
             if arg not in self.allowed_must_have:
                 raise ValueError('Error! must have type "' + str(arg) + '" not allowed')
@@ -77,7 +77,7 @@ class URLBuilder:
         return self
 
     def dont_show(self, *argv):
-        self.url += "dontShow="
+        self.url += "&dontShow="
         for arg in argv:
             if arg not in self.allowed_dont_show:
                 raise ValueError('Error! dont show "' + str(arg) + '" not allowed')

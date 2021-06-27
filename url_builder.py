@@ -67,7 +67,6 @@ class URLBuilder:
 
     def region(self, region_index):
         self.url += "&locationIdentifier=REGION%5E" + str(region_index)
-        URLBuilder.region_selected = True
         return self
 
     def must_have(self, *argv):
@@ -107,8 +106,6 @@ class URLBuilder:
         return self
 
     def get_result(self):
-        if not URLBuilder.region_selected:
-            self.region(RegionIndex.BRISTOL)
         return self.url
 
 
@@ -119,6 +116,7 @@ class URLSets:
     def standard(page_no=0):
         """Constructs and returns the final product"""
         return URLBuilder() \
+            .region(RegionIndex.BRISTOL) \
             .set_page(page_no) \
             .sort_type(SortType.HIGHEST_PRICED) \
             .min_bedrooms(0) \
@@ -126,7 +124,3 @@ class URLSets:
             .furnished_type("partFurnished", "unfurnished") \
             .get_result()
 
-
-# The Client
-url = URLSets.standard()
-print(url)

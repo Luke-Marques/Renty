@@ -1,46 +1,43 @@
+import math
 import os
 import time
 import re
 from enum import Enum
-
 import requests
 from bs4 import BeautifulSoup
 import create_database as cdb
 import data_to_tables as d2t
 
+from url_builder import URLSets
+
 # identify self to robot.txt
 headers = {'user-agent': 'Renty'}
 
-rightmove_bristol_base_url = 'https://www.rightmove.co.uk/property-for-sale/find.html?locationIdentifier=REGION%5E219' \
-                             '&sortType=10''&index=??&propertyTypes=&includeSSTC=false&mustHave=&dontShow=' \
-                             '&furnishTypes=&keywords= '
 
-
-def create_first_page_url(min_bedrooms=None, max_bedrooms=None):
-    rightmove_base_url = "https://www.rightmove.co.uk/property-to-rent/find.html?"
-
-
-def get_property_cards(base_url=None):
-    """ searches for property card elements with the class l-searchResult within url html
-    :param base_url: the url for a rightmove webpage containing property card elements
-    :return: list of property card elements
-    """
-
+def get_soup(url=None):
     # get html of base_url page
-    if base_url is None:
+    if url is None:
         page = open(f'pages{os.sep}BristolPage.html', encoding='utf-8')  # for testing
     else:
-        r = requests.get(base_url, headers=headers)
+        r = requests.get(url, headers=headers)
         page = r.text
+
+    if r.status_code != 200:
+        raise ValueError('Error! A connection error')
 
     # parse base_url page html text
     tree = BeautifulSoup(page, 'html.parser')
     better_file = tree.prettify()
     soup = BeautifulSoup(better_file, 'html.parser')
 
-    # check if page has an error
-    if soup.find_all(class_='l-container l-errorCard'):
-        raise ValueError('Error! This page contains an error card.')
+    return soup
+
+
+def get_property_cards(soup):
+    """ searches for property card elements with the class l-searchResult within url html
+    :param base_url: the url for a rightmove webpage containing property card elements
+    :return: list of property card elements
+    """
 
     # find all property card elements in page
     property_cards = soup.findAll(class_='l-searchResult is-list')
@@ -82,42 +79,55 @@ def get_data_from_property_card(property_card):
     location_element = property_card.find(class_='propertyCard-address')
     location = str(location_element)
     location = ''.join(location.splitlines())
-    location = re.search('<meta content=".*"/>(.*)</address>', location).group(1).strip()
+    location = re.search('<span>(.*)</span>', location).group(1).strip()
 
     # get description
     description_element = property_card.find(class_='propertyCard-description')
     description = str(description_element)
     description = ''.join(description.splitlines())
-    description = re.search('<span>(.*)</span></span>', description).group(1).strip()
+    description = re.search('itemprop="description">(.*)</span>', description).group(1).strip()
 
     return property_id, title, price, location, description
+
+
+def get_number_of_pages(soup):
+    result_count_element = soup.find(class_='searchHeader-resultCount')
+    result_count = str(result_count_element)
+    result_count = ''.join(result_count.splitlines())
+    result_count = re.search('>(.*)</', result_count).group(1).strip()
+    print(result_count)
+    return math.ceil(int(result_count) / 24)
 
 
 def main():
     # creates db directory and file if they do not already exist
     # cdb.main()
 
-    base_url = None
+    # url = None
+    url = URLSets.standard(0)
+    soup = get_soup(url)
+    no_pages = get_number_of_pages(soup)
+    property_cards = get_property_cards(soup)
+    for page in range(0, no_pages):
+        database = f'{os.getcwd()}{os.sep}db{os.sep}listings.db'
+        # loop through searchResult divs in url
+        for property_card in property_cards:
+            # extract data from property card element
+            data = get_data_from_property_card(property_card)
+            # connect to database
+            # conn = d2t.create_connection(database)
+            # update database table
+            # dt2.create_listing(conn, data)
+            # commit changes to database
+            # conn.commit()
+            # conn.close()
 
-    database = f'{os.getcwd()}{os.sep}db{os.sep}listings.db'
-
-    # loop through searchResult divs in url
-    property_cards = get_property_cards(base_url)
-    count = 0
-    for property_card in property_cards:
-        # extract data from property card element
-        data = get_data_from_property_card(property_card)
-        # connect to database
-        # conn = d2t.create_connection(database)
-        # update database table
-        # dt2.create_listing(conn, data)
-        # commit changes to database
-        # conn.commit()
-        # conn.close()
-
-        print(data)
-        count += 1
-    print(count)
+            print(data)
+        time.sleep(1)
+        url = URLSets.standard(page)
+        soup = get_soup(url)
+        property_cards = get_property_cards(soup)
+    print("done")
 
 
 if __name__ == '__main__':

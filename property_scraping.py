@@ -13,6 +13,7 @@ from url_builder import URLSets
 # identify self to robot.txt
 headers = {'user-agent': 'Renty'}
 
+PROPERTIES_PER_PAGE = 24
 
 def get_soup(url=None):
     # get html of base_url page
@@ -72,7 +73,8 @@ def get_data_from_property_card(property_card):
     price = str(price_element)
     price = ''.join(price.splitlines())
     price = re.search('>(.*)</', price).group(1).strip()
-    price = price.replace('£', '').replace(',', '')
+    price = price.replace('£', '').replace(',', '').replace(' pcm', '')
+    price = int(price)
     # price = float(price)
 
     # get location
@@ -96,7 +98,7 @@ def get_number_of_pages(soup):
     result_count = ''.join(result_count.splitlines())
     result_count = re.search('>(.*)</', result_count).group(1).strip()
     print(result_count)
-    return math.ceil(int(result_count) / 24)
+    return math.ceil(int(result_count) / PROPERTIES_PER_PAGE)
 
 
 def main():

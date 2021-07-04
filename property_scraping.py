@@ -5,6 +5,7 @@ import re
 from enum import Enum
 import requests
 from bs4 import BeautifulSoup
+import process_text
 import create_database as cdb
 import data_to_tables as d2t
 
@@ -68,6 +69,40 @@ def get_data_from_property_card(property_card):
     title = ''.join(title.splitlines())
     title = re.search('>(.*)</', title).group(1).strip()
 
+    # get number of bedrooms
+    title_processed = process_text.lemmatize_string(title)
+    if len(title_processed) > 1:
+        if title_processed[1] == 'bedroom' and title_processed[0].isnumeric():
+            num_bed = int(title_processed[0])
+        elif 'studio' in title_processed:
+            num_bed = 0
+        else:
+            num_bed = None
+
+        # get type of property
+        if num_bed == 0:
+            property_type = 'studio'
+        elif 'apartment' in title_processed:
+            property_type = 'apartment'
+        elif 'flat' in title_processed:
+            property_type = 'flat'
+        elif 'detach' in title_processed:
+            property_type = 'detached house'
+        elif 'terrace' in title_processed:
+            property_type = 'terrace house'
+        elif 'property' in title_processed:
+            property_type = 'property'
+        elif 'house' in title_processed:
+            property_type = 'house'
+        elif 'private' in title_processed and 'hall' in title_processed:
+            property_type = 'private halls'
+        else:
+            print(title_processed)
+            property_type = None
+    else:
+        num_bed = None
+        property_type = None
+
     # get price
     price_element = property_card.find(class_='propertyCard-priceValue')
     price = str(price_element)
@@ -89,8 +124,19 @@ def get_data_from_property_card(property_card):
     description = ''.join(description.splitlines())
     description = re.search('itemprop="description">(.*)</span>', description).group(1).strip()
 
-    return property_id, title, price, location, description
+    # get agent and agent_region
+    agent_region_element = property_card.find('img', class_='propertyCard-branchLogo-image')
+    agent_region = str(agent_region_element)
+    agent_region = ''.join(agent_region.splitlines())
+    if re.search('alt="(.*) Logo', agent_region) is not None:
+        agent_region = re.search('alt="(.*) Logo', agent_region).group(1).strip()
+        agent = agent_region.split(',')[0]
+        agent_region = agent_region.split(',')[1]
+    else:
+        agent_region = None
+        agent = None
 
+    return property_id, title, num_bed, property_type, price, location, description, agent, agent_region
 
 def get_number_of_pages(soup):
     result_count_element = soup.find(class_='searchHeader-resultCount')
@@ -99,7 +145,6 @@ def get_number_of_pages(soup):
     result_count = re.search('>(.*)</', result_count).group(1).strip()
     print(result_count)
     return math.ceil(int(result_count) / PROPERTIES_PER_PAGE)
-
 
 def main():
     # creates db directory and file if they do not already exist

@@ -71,28 +71,37 @@ def get_data_from_property_card(property_card):
 
     # get number of bedrooms
     title_processed = process_text.lemmatize_string(title)
-    if title_processed[1] == 'bedroom' and title_processed[0].isnumeric():
-        num_bed = int(title_processed[0])
-    elif 'studio' in title_processed:
-        num_bed = 0
+    if len(title_processed) > 1:
+        if title_processed[1] == 'bedroom' and title_processed[0].isnumeric():
+            num_bed = int(title_processed[0])
+        elif 'studio' in title_processed:
+            num_bed = 0
+        else:
+            num_bed = None
+
+        # get type of property
+        if num_bed == 0:
+            property_type = 'studio'
+        elif 'apartment' in title_processed:
+            property_type = 'apartment'
+        elif 'flat' in title_processed:
+            property_type = 'flat'
+        elif 'detach' in title_processed:
+            property_type = 'detached house'
+        elif 'terrace' in title_processed:
+            property_type = 'terrace house'
+        elif 'property' in title_processed:
+            property_type = 'property'
+        elif 'house' in title_processed:
+            property_type = 'house'
+        elif 'private' in title_processed and 'hall' in title_processed:
+            property_type = 'private halls'
+        else:
+            print(title_processed)
+            property_type = None
     else:
         num_bed = None
-
-    # get type of property
-    if num_bed == 0:
-        property_type = 'studio'
-    elif 'apartment' in title_processed:
-        property_type = 'apartment'
-    elif 'flat' in title_processed:
-        property_type = 'flat'
-    elif 'detach' in title_processed:
-        property_type = 'detached house'
-    elif 'terrace' in title_processed:
-        property_type = 'terrace house'
-    elif 'property' in title_processed:
-        property_type = 'property'
-    elif 'house' in title_processed:
-        property_type = 'house'
+        property_type = None
 
     # get price
     price_element = property_card.find(class_='propertyCard-priceValue')

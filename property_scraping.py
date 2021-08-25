@@ -5,21 +5,24 @@ import re
 from enum import Enum
 import requests
 from bs4 import BeautifulSoup
+from sqlite3 import Error
+
 import process_text
-import create_database as cdb
-import data_to_tables as d2t
+from database_builder import DatabaseBuilder
 
 from url_builder import URLSets
+
 
 # identify self to robot.txt
 headers = {'user-agent': 'Renty'}
 
 PROPERTIES_PER_PAGE = 24
 
+
 def get_soup(url=None):
     # get html of base_url page
     if url is None:
-        page = open(f'pages{os.sep}BristolPage.html', encoding='utf-8')  # for testing
+        page = open(f'pages{os.sep}BristolRents.html', encoding='utf-8')  # for testing
     else:
         r = requests.get(url, headers=headers)
         page = r.text
@@ -37,7 +40,7 @@ def get_soup(url=None):
 
 def get_property_cards(soup):
     """ searches for property card elements with the class l-searchResult within url html
-    :param base_url: the url for a rightmove webpage containing property card elements
+    :param soup:
     :return: list of property card elements
     """
 
@@ -77,7 +80,7 @@ def get_data_from_property_card(property_card):
         elif 'studio' in title_processed:
             num_bed = 0
         else:
-            num_bed = None
+            num_bed = -1
 
         # get type of property
         if num_bed == 0:
@@ -89,7 +92,7 @@ def get_data_from_property_card(property_card):
         elif 'detach' in title_processed:
             property_type = 'detached house'
         elif 'terrace' in title_processed:
-            property_type = 'terrace house'
+            property_type = 'terraced house'
         elif 'property' in title_processed:
             property_type = 'property'
         elif 'house' in title_processed:
@@ -100,8 +103,8 @@ def get_data_from_property_card(property_card):
             print(title_processed)
             property_type = None
     else:
-        num_bed = None
-        property_type = None
+        num_bed = -1
+        property_type = -1
 
     # get price
     price_element = property_card.find(class_='propertyCard-priceValue')
@@ -112,11 +115,11 @@ def get_data_from_property_card(property_card):
     price = int(price)
     # price = float(price)
 
-    # get location
-    location_element = property_card.find(class_='propertyCard-address')
-    location = str(location_element)
-    location = ''.join(location.splitlines())
-    location = re.search('<span>(.*)</span>', location).group(1).strip()
+    # get address
+    address_element = property_card.find(class_='propertyCard-address')
+    address = str(address_element)
+    address = ''.join(address.splitlines())
+    address = re.search('<span>(.*)</span>', address).group(1).strip()
 
     # get description
     description_element = property_card.find(class_='propertyCard-description')
@@ -136,45 +139,35 @@ def get_data_from_property_card(property_card):
         agent_region = None
         agent = None
 
-    return property_id, title, num_bed, property_type, price, location, description, agent, agent_region
+    return property_id, title, num_bed, property_type, price, address, description, agent, agent_region
+
 
 def get_number_of_pages(soup):
     result_count_element = soup.find(class_='searchHeader-resultCount')
     result_count = str(result_count_element)
     result_count = ''.join(result_count.splitlines())
     result_count = re.search('>(.*)</', result_count).group(1).strip()
-    print(result_count)
+    print('Number of pages :', result_count)
     return math.ceil(int(result_count) / PROPERTIES_PER_PAGE)
 
-def main():
-    # creates db directory and file if they do not already exist
-    # cdb.main()
 
-    # url = None
+def main():
+
+    db = DatabaseBuilder('renty.db')
+    db.new_table('properties')
+    db.new_table('dates')
+
     url = URLSets.standard(0)
     soup = get_soup(url)
-    no_pages = get_number_of_pages(soup)
     property_cards = get_property_cards(soup)
-    for page in range(0, no_pages):
-        database = f'{os.getcwd()}{os.sep}db{os.sep}listings.db'
-        # loop through searchResult divs in url
-        for property_card in property_cards:
-            # extract data from property card element
-            data = get_data_from_property_card(property_card)
-            # connect to database
-            # conn = d2t.create_connection(database)
-            # update database table
-            # dt2.create_listing(conn, data)
-            # commit changes to database
-            # conn.commit()
-            # conn.close()
-
-            print(data)
-        time.sleep(1)
-        url = URLSets.standard(page)
-        soup = get_soup(url)
-        property_cards = get_property_cards(soup)
-    print("done")
+    for property_card in property_cards:
+        data = get_data_from_property_card(property_card)
+        try:
+            db.insert_data('properties', data)
+        except Error as e:
+            print(e)
+    time.sleep(1)
+    print('Done.')
 
 
 if __name__ == '__main__':

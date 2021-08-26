@@ -24,23 +24,24 @@ class DatabaseBuilder:
         if table == 'properties':
             sql_table_statement = \
                 f'''CREATE TABLE IF NOT EXISTS {table} (
-                    id integer PRIMARY KEY,
-                    title text NOT NULL,
-                    num_bed integer NOT NULL,
-                    property_type text NOT NULL,
-                    rent_amount integer NOT NULL,
-                    description text NOT NULL,
-                    agent text NOT NULL,
-                    agent_region text NOT NULL,
-                    address text NOT NULL
+                    id INTEGER PRIMARY KEY,
+                    title TEXT,
+                    num_bed INTEGER,
+                    property_type TEXT,
+                    rent_pcm INTEGER,
+                    description TEXT,
+                    agent TEXT,
+                    agent_region TEXT,
+                    address TEXT,
+                    postcode TEXT
                 );'''
         elif table == 'dates':
             sql_table_statement = \
                 f'''CREATE TABLE IF NOT EXISTS {table} (
-                    property_id integer KEY,
-                    first_seen_at text NOT NULL,
-                    listed_at text NOT NULL,
-                    last_seen_at text NOT NULL
+                    property_id integer PRIMARY KEY,
+                    first_seen_at TEXT,
+                    listed_at TEXT,
+                    last_seen_at TEXT
                 );'''
 
         try:
@@ -58,7 +59,7 @@ class DatabaseBuilder:
 
         if table == 'properties':
             cols = ['id', 'title', 'num_bed', 'property_type', 'rent_amount',
-                    'address', 'description', 'agent', 'agent_region']
+                    'description', 'agent', 'agent_region', 'address', 'postcode']
         elif table == 'dates':
             cols = ['property_id', 'first_seen_at', 'listed_at', 'last_seen_at']
 
@@ -69,7 +70,6 @@ class DatabaseBuilder:
         c = conn.cursor()
         c.execute(sql_insert_statement, data)
         conn.commit()
-        print(f'Row ID added to "{table}" table : {data[0]}')
         last_row_id = c.lastrowid
         conn.close()
 

@@ -2,10 +2,10 @@ import math
 import os
 import time
 import re
-from enum import Enum
 import requests
 from bs4 import BeautifulSoup
 from sqlite3 import Error
+from tqdm import tqdm
 
 import process_text
 from database_builder import DatabaseBuilder
@@ -97,6 +97,8 @@ def get_data_from_property_card(property_card):
             property_type = 'property'
         elif 'house' in title_processed:
             property_type = 'house'
+        elif 'park' in title_processed:
+            property_type = 'parking'
         elif 'private' in title_processed and 'hall' in title_processed:
             property_type = 'private halls'
         else:
@@ -104,7 +106,7 @@ def get_data_from_property_card(property_card):
             property_type = None
     else:
         num_bed = -1
-        property_type = -1
+        property_type = None
 
     # get price
     price_element = property_card.find(class_='propertyCard-priceValue')
@@ -112,14 +114,21 @@ def get_data_from_property_card(property_card):
     price = ''.join(price.splitlines())
     price = re.search('>(.*)</', price).group(1).strip()
     price = price.replace('£', '').replace(',', '').replace(' pcm', '')
-    price = int(price)
+    try:
+        price = int(price)
+    except ValueError:
+        price = -1
     # price = float(price)
 
-    # get address
+    # get address and postcode
     address_element = property_card.find(class_='propertyCard-address')
     address = str(address_element)
     address = ''.join(address.splitlines())
     address = re.search('<span>(.*)</span>', address).group(1).strip()
+    try:
+        postcode = re.search(r'[A-Za-z]{1,2}\d{1,2}', address.upper()).group(0).strip()
+    except AttributeError:
+        postcode = None
 
     # get description
     description_element = property_card.find(class_='propertyCard-description')
@@ -139,7 +148,7 @@ def get_data_from_property_card(property_card):
         agent_region = None
         agent = None
 
-    return property_id, title, num_bed, property_type, price, address, description, agent, agent_region
+    return property_id, title, num_bed, property_type, price, description, agent, agent_region, address, postcode
 
 
 def get_number_of_pages(soup):
@@ -157,17 +166,28 @@ def main():
     db.new_table('properties')
     db.new_table('dates')
 
-    url = URLSets.standard(0)
-    soup = get_soup(url)
-    property_cards = get_property_cards(soup)
-    for property_card in property_cards:
-        data = get_data_from_property_card(property_card)
-        try:
-            db.insert_data('properties', data)
-        except Error as e:
-            print(e)
+    # loop through possible number of beds
+    print('GETTING RENTAL PROPERTY DATA')
+    print('----------------------------')
+    for num_beds in range(11):
+        print('Number of beds  :', num_beds)
+        url = URLSets.standard(num_beds=num_beds)
+        soup = get_soup(url)
+        num_pages = get_number_of_pages(soup)
+        for page in range(num_pages):
+            print('Page            :', page, end='')
+            url = URLSets.standard(page_no=page, num_beds=num_beds)
+            soup = get_soup(url)
+            property_cards = get_property_cards(soup)
+            print()
+            for property_card in tqdm(property_cards):
+                data = get_data_from_property_card(property_card)
+                try:
+                    db.insert_data('properties', data)
+                except Error as e:
+                    print(e)
+        print('----------------------------')
     time.sleep(1)
-    print('Done.')
 
 
 if __name__ == '__main__':

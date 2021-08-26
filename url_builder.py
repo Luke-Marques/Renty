@@ -113,14 +113,14 @@ class URLSets:
     """The Director, building a complex representation."""
 
     @staticmethod
-    def standard(page_no=0):
+    def standard(page_no=0, num_beds=0):
         """Constructs and returns the final product"""
         return URLBuilder() \
             .region(RegionIndex.BRISTOL) \
             .set_page(page_no) \
             .sort_type(SortType.HIGHEST_PRICED) \
-            .min_bedrooms(0) \
-            .max_bedrooms(0) \
+            .min_bedrooms(num_beds) \
+            .max_bedrooms(num_beds) \
             .furnished_type("partFurnished", "unfurnished") \
             .get_result()
 

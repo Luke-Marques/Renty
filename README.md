@@ -1,5 +1,10 @@
 # Renty 
 
+## Setup 
+
+1. To use a virtual environment `virtualenv venv -p python3` in the project directory
+2. Active it `source venv/bin/activate`
+
 ## Goal
 Provide historic data about the propery market 
 

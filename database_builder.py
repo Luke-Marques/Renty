@@ -58,7 +58,7 @@ class DatabaseBuilder:
         conn = self.connect()
 
         if table == 'properties':
-            cols = ['id', 'title', 'num_bed', 'property_type', 'rent_amount',
+            cols = ['id', 'title', 'num_bed', 'property_type', 'rent_pcm',
                     'description', 'agent', 'agent_region', 'address', 'postcode']
         elif table == 'dates':
             cols = ['property_id', 'first_seen_at', 'listed_at', 'last_seen_at']
@@ -68,7 +68,10 @@ class DatabaseBuilder:
         sql_insert_statement = f'''INSERT INTO {table}({', '.join(cols)}) VALUES({', '.join(values)})'''
 
         c = conn.cursor()
+
+
         c.execute(sql_insert_statement, data)
+
         conn.commit()
         last_row_id = c.lastrowid
         conn.close()

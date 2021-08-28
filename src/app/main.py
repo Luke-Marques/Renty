@@ -162,8 +162,10 @@ def get_number_of_pages(soup):
 
 
 def main():
-
-    db = DatabaseBuilder('renty.db')
+    basepath = os.path.dirname(__file__)
+    dbpath = os.path.abspath(os.path.join(basepath,os.pardir, "renty.db"))
+    print(dbpath)
+    db = DatabaseBuilder(dbpath)
     db.new_table('properties')
     db.new_table('dates')
 

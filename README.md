@@ -1,7 +1,12 @@
 # Renty 
 
-## Goal
-Provide historic data about the propery market 
+This collaborative project aims to scrape property data from major property listing sites (beginning with rightmove.com), and use this data to assess the property market.
+
+---
+
+## Goals
+
+### Provide historic data about the propery market 
 
 - Bedrooms : Card/Search
 - Property Type (House, Flat, etc) : Card
@@ -17,6 +22,16 @@ Provide historic data about the propery market
 
 - Price : Card
 
+This data will be stored using an SQLite server, run locally. 
+
+### Host an interactive dashboard of this data for users to explore property market indicators for their region (beginning with Bristol only).
+
+This will be accomplished using Plotly Dash, allowing for interactivity and responsiveness (as Dash is built on top of react.js).
+
+### Provide a Predictive Tool
+
+Create models to predict a desired property feature (e.g. price), from other stated features (e.g. number of bedrooms, region, postcode, date, etc.).
+This model may be useful to both renters, seeking to quickly gain market information when moving house to an area they're unfamiliar with, and to landlords, seeking to assess the current state of the market in order to list their property with appropriate features. 
 
 ## Creating URLS
 
